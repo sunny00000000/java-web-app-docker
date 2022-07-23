@@ -1,40 +1,30 @@
 node{
-     
-    stage('SCM Checkout'){
-        git url: 'https://github.com/MithunTechnologiesDevOps/java-web-app-docker.git',branch: 'master'
+    
+   def buildNumber = BUILD_NUMBER
+   def mavenHome = tool name: "maven3.8.6"
+   
+    stage("Git CheckOut"){
+         git credentialsId: '7af5a31e-4991-41fe-888d-65b11501ebc5', url: 'https://github.com/sunny00000000/java-web-app-docker.git'
     }
     
     stage(" Maven Clean Package"){
-      def mavenHome =  tool name: "Maven-3.5.6", type: "maven"
-      def mavenCMD = "${mavenHome}/bin/mvn"
-      sh "${mavenCMD} clean package"
-      
+      sh "${mavenHome}/bin/mvn clean package"
     } 
     
-    
-    stage('Build Docker Image'){
-        sh 'docker build -t dockerhandson/java-web-app .'
+    stage("Build Dokcer Image") {
+         sh "docker build -t sunny00000000/java-web-app:${buildNumber} ."
     }
     
-    stage('Push Docker Image'){
-        withCredentials([string(credentialsId: 'Docker_Hub_Pwd', variable: 'Docker_Hub_Pwd')]) {
-          sh "docker login -u dockerhandson -p ${Docker_Hub_Pwd}"
-        }
-        sh 'docker push dockerhandson/java-web-app'
-     }
-     
-      stage('Run Docker Image In Dev Server'){
-        
-        def dockerRun = ' docker run  -d -p 8080:8080 --name java-web-app dockerhandson/java-web-app'
-         
-         sshagent(['DOCKER_SERVER']) {
-          sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.20.72 docker stop java-web-app || true'
-          sh 'ssh  ubuntu@172.31.20.72 docker rm java-web-app || true'
-          sh 'ssh  ubuntu@172.31.20.72 docker rmi -f  $(docker images -q) || true'
-          sh "ssh  ubuntu@172.31.20.72 ${dockerRun}"
-       }
-       
+    
+    stage("Docker Push"){
+        sh "docker login -u sunny00000000 -p Sunny007@"
+        sh "docker push sunny00000000/java-web-app:${buildNumber}"
     }
-     
-     
+
+   stage("Deploy to docker swarm cluster"){
+       sshagent(['d36fdb1d-9d9b-451a-91e8-440f286425fe']) {
+      sh "ssh ubuntu@18.207.126.96 docker service create --name javawebapp -p 7070:8080 --replicas 2  sunny00000000/java-web-app:${buildNumber}"
+    }
+  }
 }
+
