@@ -1,0 +1,16 @@
+version: '3'
+services:
+  java:
+    image: sunny00000000/java-jb:2.1
+    ports:
+      - 8090:8080
+    volumes:
+      - java
+    networks:
+      - compose
+volumes:
+  java:
+    driver: local
+networks:
+  compose:
+    driver: bridge
