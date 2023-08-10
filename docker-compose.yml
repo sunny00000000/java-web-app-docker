@@ -1,7 +1,7 @@
 version: '3'
 services:
   java:
-    image: sunny00000000/java-jb:2.1
+    image: sunny00000000/java-jb:2
     ports:
       - 8090:8080
     volumes:
